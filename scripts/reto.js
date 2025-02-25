@@ -38,19 +38,49 @@ function showFavourites() {
         const list = document.createElement('ul');
         favourites.forEach(fav => {
             const listItem = document.createElement('li');
-            listItem.textContent = fav.name;
+            listItem.innerHTML = `
+                ${fav.name}
+                <button onclick="showFavouriteDetails('${fav.id}')">Show Details</button>
+                <button onclick="removeFromFavourites('${fav.id}')">Remove</button>
+            `;
             list.appendChild(listItem);
         });
         content.appendChild(list);
     }
 }
 
+function showFavouriteDetails(id) {
+    fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            const cocktail = data.drinks[0];
+            displayCocktail(cocktail);
+        });
+}
+
+function removeFromFavourites(id) {
+    let favourites = JSON.parse(localStorage.getItem('favourites')) || [];
+    favourites = favourites.filter(fav => fav.id !== id);
+    localStorage.setItem('favourites', JSON.stringify(favourites));
+    showFavourites();
+}
+
 function displayCocktail(cocktail) {
     const content = document.getElementById('content');
+    const ingredients = [];
+    for (let i = 1; i <= 15; i++) {
+        if (cocktail[`strIngredient${i}`]) {
+            ingredients.push(`${cocktail[`strIngredient${i}`]} - ${cocktail[`strMeasure${i}`] || ''}`);
+        }
+    }
     content.innerHTML = `
         <h2>${cocktail.strDrink}</h2>
         <img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px;">
-        <p>${cocktail.strInstructions}</p>
+        <p><strong>ID:</strong> ${cocktail.idDrink}</p>
+        <p><strong>Category:</strong> ${cocktail.strCategory}</p>
+        <p><strong>Ingredients:</strong></p>
+        <ul>${ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}</ul>
+        <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
         <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
     `;
 }
