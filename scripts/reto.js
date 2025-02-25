@@ -95,15 +95,18 @@ function displayCocktail(cocktail) {
     }
     content.innerHTML = `
         <h2>${cocktail.strDrink}</h2>
-        <img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px;">
+        <img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px; border-radius: 10px;">
         <p><strong>ID:</strong> ${cocktail.idDrink}</p>
         <p><strong>Category:</strong> ${cocktail.strCategory}</p>
         <p><strong>Ingredients:</strong></p>
-        <ul>${ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}</ul>
+        <div class="ingredients">
+            ${ingredients.map(ingredient => `<div class="ingredient">${ingredient}</div>`).join('')}
+        </div>
         <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
         <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
     `;
 }
+
 
 function addToFavourites(id, name) {
     const favourites = JSON.parse(localStorage.getItem('favourites')) || [];
