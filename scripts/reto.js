@@ -3,6 +3,62 @@ document.getElementById('randomCocktailBtn').addEventListener('click', getRandom
 document.getElementById('selectCocktailBtn').addEventListener('click', selectCocktail);
 document.getElementById('favouritesBtn').addEventListener('click', showFavourites);
 
+// Función para mostrar y ocultar el loader
+function showLoader() {
+    document.getElementById('loader').style.display = 'block';
+}
+
+function hideLoader() {
+    document.getElementById('loader').style.display = 'none';
+}
+
+// Modificar la función getRandomCocktail para incluir el loader
+function getRandomCocktail() {
+    showLoader(); // Mostrar el loader antes de hacer la petición
+    fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php')
+        .then(response => response.json())
+        .then(data => {
+            const cocktail = data.drinks[0];
+            displayCocktail(cocktail);
+        })
+        .catch(error => alert('Error fetching cocktail!'))
+        .finally(() => hideLoader()); // Ocultar el loader cuando termina la petición
+}
+
+// Modificar la función selectCocktail para incluir el loader
+function selectCocktail() {
+    const cocktailName = prompt('Enter the name of the cocktail:');
+    if (cocktailName) {
+        showLoader();
+        fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${cocktailName}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.drinks) {
+                    const cocktail = data.drinks[0];
+                    displayCocktail(cocktail);
+                } else {
+                    alert('Cocktail not found');
+                }
+            })
+            .catch(error => alert('Error fetching cocktail!'))
+            .finally(() => hideLoader());
+    }
+}
+
+// Modificar la función showFavouriteDetails para incluir el loader
+function showFavouriteDetails(id) {
+    showLoader();
+    fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            const cocktail = data.drinks[0];
+            displayCocktail(cocktail);
+        })
+        .catch(error => alert('Error fetching cocktail details!'))
+        .finally(() => hideLoader());
+}
+
+
 function getRandomCocktail() {
     fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php')
         .then(response => response.json())
