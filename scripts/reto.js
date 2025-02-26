@@ -3,84 +3,44 @@ document.getElementById('randomCocktailBtn').addEventListener('click', getRandom
 document.getElementById('selectCocktailBtn').addEventListener('click', selectCocktail);
 document.getElementById('favouritesBtn').addEventListener('click', showFavourites);
 
-// Función para mostrar y ocultar el loader
-function showLoader() {
-    document.getElementById('loader').style.display = 'block';
+function showLoadingBar() {
+    document.getElementById('loadingBar').style.display = 'block';
 }
 
-function hideLoader() {
-    document.getElementById('loader').style.display = 'none';
+function hideLoadingBar() {
+    document.getElementById('loadingBar').style.display = 'none';
 }
 
-// Modificar la función getRandomCocktail para incluir el loader
-function getRandomCocktail() {
-    showLoader(); // Mostrar el loader antes de hacer la petición
-    fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php')
-        .then(response => response.json())
-        .then(data => {
-            const cocktail = data.drinks[0];
-            displayCocktail(cocktail);
-        })
-        .catch(error => alert('Error fetching cocktail!'))
-        .finally(() => hideLoader()); // Ocultar el loader cuando termina la petición
-}
-
-// Modificar la función selectCocktail para incluir el loader
-function selectCocktail() {
-    const cocktailName = prompt('Enter the name of the cocktail:');
-    if (cocktailName) {
-        showLoader();
-        fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${cocktailName}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.drinks) {
-                    const cocktail = data.drinks[0];
-                    displayCocktail(cocktail);
-                } else {
-                    alert('Cocktail not found');
-                }
-            })
-            .catch(error => alert('Error fetching cocktail!'))
-            .finally(() => hideLoader());
+async function getRandomCocktail() {
+    showLoadingBar();
+    try {
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Add a 3-second delay
+        const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php');
+        const data = await response.json();
+        const cocktail = data.drinks[0];
+        displayCocktail(cocktail);
+    } finally {
+        hideLoadingBar();
     }
 }
 
-// Modificar la función showFavouriteDetails para incluir el loader
-function showFavouriteDetails(id) {
-    showLoader();
-    fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`)
-        .then(response => response.json())
-        .then(data => {
-            const cocktail = data.drinks[0];
-            displayCocktail(cocktail);
-        })
-        .catch(error => alert('Error fetching cocktail details!'))
-        .finally(() => hideLoader());
-}
-
-
-function getRandomCocktail() {
-    fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php')
-        .then(response => response.json())
-        .then(data => {
-            const cocktail = data.drinks[0];
-            displayCocktail(cocktail);
-        });
-}
-
-function selectCocktail() {
+async function selectCocktail() {
     const cocktailName = prompt('Enter the name of the cocktail:');
     if (cocktailName) {
-        fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${cocktailName}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.drinks) {
-                    const cocktail = data.drinks[0];
-                    displayCocktail(cocktail);
-                } else {
-                    alert('Cocktail not found');
-                }
-            });
+        showLoadingBar();
+        try {
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Add a 3-second delay
+            const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${cocktailName}`);
+            const data = await response.json();
+            if (data.drinks) {
+                const cocktail = data.drinks[0];
+                displayCocktail(cocktail);
+            } else {
+                alert('Cocktail not found');
+            }
+        } finally {
+            hideLoadingBar();
+        }
     }
 }
 
@@ -105,13 +65,17 @@ function showFavourites() {
     }
 }
 
-function showFavouriteDetails(id) {
-    fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`)
-        .then(response => response.json())
-        .then(data => {
-            const cocktail = data.drinks[0];
-            displayCocktail(cocktail);
-        });
+async function showFavouriteDetails(id) {
+    showLoadingBar();
+    try {
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Add a 3-second delay
+        const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`);
+        const data = await response.json();
+        const cocktail = data.drinks[0];
+        displayCocktail(cocktail);
+    } finally {
+        hideLoadingBar();
+    }
 }
 
 function removeFromFavourites(id) {
