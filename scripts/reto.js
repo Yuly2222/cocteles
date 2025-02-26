@@ -14,7 +14,7 @@ function hideLoadingBar() {
 async function getRandomCocktail() {
     showLoadingBar();
     try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Add a 3-second delay
         const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php');
         const data = await response.json();
         const cocktail = data.drinks[0];
@@ -22,27 +22,40 @@ async function getRandomCocktail() {
     } finally {
         hideLoadingBar();
     }
-}
+}       
 
 async function selectCocktail() {
     const cocktailName = prompt('Enter the name of the cocktail:');
-    if (cocktailName) {
-        showLoadingBar();
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${cocktailName}`);
-            const data = await response.json();
-            if (data.drinks) {
-                const cocktail = data.drinks[0];
-                displayCocktail(cocktail);
-            } else {
-                alert('Cocktail not found');
-            }
-        } finally {
-            hideLoadingBar();
+
+    if (!cocktailName) {
+        alert('Please enter a cocktail name.');
+        return;
+    }
+
+    showLoader();
+
+    try {
+        const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${cocktailName}`);
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch cocktails. Please try again later.');
         }
+
+        const data = await response.json();
+
+        if (!data.drinks) {
+            throw new Error('No cocktails found. Try another name.');
+        }
+
+        // Si hay varios cócteles, mostramos una lista en lugar de uno solo
+        displayCocktailList(data.drinks);
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        hideLoader();
     }
 }
+
 
 function showFavourites() {
     const favourites = JSON.parse(localStorage.getItem('favourites')) || [];
@@ -68,7 +81,7 @@ function showFavourites() {
 async function showFavouriteDetails(id) {
     showLoadingBar();
     try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Add a 3-second delay
         const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`);
         const data = await response.json();
         const cocktail = data.drinks[0];
@@ -85,26 +98,40 @@ function removeFromFavourites(id) {
     showFavourites();
 }
 
-function displayCocktail(cocktail) {
+function displayCocktailList(cocktails) {
     const content = document.getElementById('content');
-    const ingredients = [];
-    for (let i = 1; i <= 15; i++) {
-        if (cocktail[`strIngredient${i}`]) {
-            ingredients.push(`${cocktail[`strIngredient${i}`]} - ${cocktail[`strMeasure${i}`] || ''}`);
-        }
-    }
-    content.innerHTML = `
-        <h2>${cocktail.strDrink}</h2>
-        <img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px; border-radius: 10px;">
-        <p><strong>ID:</strong> ${cocktail.idDrink}</p>
-        <p><strong>Category:</strong> ${cocktail.strCategory}</p>
-        <p><strong>Ingredients:</strong></p>
-        <div class="ingredients">
-            ${ingredients.map(ingredient => `<div class="ingredient">${ingredient}</div>`).join('')}
-        </div>
-        <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
-        <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
-    `;
+    content.innerHTML = `<h2>Select a Cocktail</h2>`;
+
+    const list = document.createElement('ul');
+    list.style.listStyle = 'none';
+    list.style.padding = '0';
+
+    cocktails.forEach(cocktail => {
+        const listItem = document.createElement('li');
+        listItem.style.cursor = 'pointer';
+        listItem.style.padding = '10px';
+        listItem.style.margin = '5px 0';
+        listItem.style.borderRadius = '8px';
+        listItem.style.backgroundColor = '#444';
+        listItem.style.color = '#fff';
+        listItem.style.textAlign = 'center';
+        listItem.style.transition = 'background-color 0.3s';
+
+        listItem.innerHTML = `${cocktail.strDrink}`;
+        listItem.addEventListener('click', () => displayCocktail(cocktail));
+
+        listItem.addEventListener('mouseover', () => {
+            listItem.style.backgroundColor = '#ff6f61';
+        });
+
+        listItem.addEventListener('mouseout', () => {
+            listItem.style.backgroundColor = '#444';
+        });
+
+        list.appendChild(listItem);
+    });
+
+    content.appendChild(list);
 }
 
 
