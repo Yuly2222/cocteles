@@ -15,14 +15,16 @@ async function getRandomCocktail() {
     try {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Add a 3-second delay
         const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
         const data = await response.json();
         const cocktail = data.drinks[0];
         displayCocktail(cocktail);
     } catch (error) {
         console.error('Failed to fetch random cocktail:', error);
         alert('Failed to fetch random cocktail. Please try again later.');
-    } 
-    finally {
+    } finally {
         hideLoadingBar();
     }
 }
@@ -38,8 +40,7 @@ async function selectCocktail() {
             }
             const data = await response.json();
             if (data.drinks) {
-                const cocktail = data.drinks[0];
-                displayCocktail(cocktail);
+                displayCocktails(data.drinks);
             } else {
                 alert('Cocktail not found');
             }
@@ -93,26 +94,31 @@ function removeFromFavourites(id) {
     showFavourites();
 }
 
-function displayCocktail(cocktail) {
+function displayCocktails(cocktails) {
     const content = document.getElementById('content');
-    const ingredients = [];
-    for (let i = 1; i <= 15; i++) {
-        if (cocktail[`strIngredient${i}`]) {
-            ingredients.push(`${cocktail[`strIngredient${i}`]} - ${cocktail[`strMeasure${i}`] || ''}`);
+    content.innerHTML = '<h2>Cocktails</h2>';
+    cocktails.forEach(cocktail => {
+        const ingredients = [];
+        for (let i = 1; i <= 15; i++) {
+            if (cocktail[`strIngredient${i}`]) {
+                ingredients.push(`${cocktail[`strIngredient${i}`]} - ${cocktail[`strMeasure${i}`] || ''}`);
+            }
         }
-    }
-    content.innerHTML = `
-        <h2>${cocktail.strDrink}</h2>
-        <img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px; border-radius: 10px;">
-        <p><strong>ID:</strong> ${cocktail.idDrink}</p>
-        <p><strong>Category:</strong> ${cocktail.strCategory}</p>
-        <p><strong>Ingredients:</strong></p>
-        <div class="ingredients">
-            ${ingredients.map(ingredient => `<div class="ingredient">${ingredient}</div>`).join('')}
-        </div>
-        <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
-        <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
-    `;
+        const cocktailDiv = document.createElement('div');
+        cocktailDiv.innerHTML = `
+            <h3>${cocktail.strDrink}</h3>
+            <img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px; border-radius: 10px;">
+            <p><strong>ID:</strong> ${cocktail.idDrink}</p>
+            <p><strong>Category:</strong> ${cocktail.strCategory}</p>
+            <p><strong>Ingredients:</strong></p>
+            <div class="ingredients">
+                ${ingredients.map(ingredient => `<div class="ingredient">${ingredient}</div>`).join('')}
+            </div>
+            <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
+            <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
+        `;
+        content.appendChild(cocktailDiv);
+    });
 }
 
 
