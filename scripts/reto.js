@@ -1,91 +1,104 @@
 document.getElementById('randomCocktailBtn').addEventListener('click', getRandomCocktail);
-document.getElementById('selectCocktailBtn').addEventListener('click', showCocktailSearch);
+document.getElementById('selectCocktailBtn').addEventListener('click', selectCocktail);
 document.getElementById('favouritesBtn').addEventListener('click', showFavourites);
+document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("cocktailSearch");
+    const resultsList = document.getElementById("searchResults");
+
+    searchInput.addEventListener("input", async function () {
+        const query = searchInput.value.trim();
+        if (query.length < 3) {
+            resultsList.innerHTML = "";
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            resultsList.innerHTML = "";
+
+            if (data.drinks) {
+                data.drinks.forEach(drink => {
+                    const li = document.createElement("li");
+                    li.textContent = drink.strDrink;
+                    li.addEventListener("click", () => displayCocktail(drink));
+                    resultsList.appendChild(li);
+                });
+            }
+        } catch (error) {
+            console.error("Error fetching cocktail suggestions:", error);
+        }
+    });
+});
+
+let isLoading = false;
 
 function showLoadingBar() {
-    document.getElementById('loadingBar').style.display = 'block';
+    if (!isLoading) {
+        const loadingBar = document.getElementById('loadingBar');
+        loadingBar.style.display = 'block';
+        isLoading = true;
+    }
 }
 
 function hideLoadingBar() {
-    document.getElementById('loadingBar').style.display = 'none';
+    const loadingBar = document.getElementById('loadingBar');
+    loadingBar.style.display = 'none';
+    isLoading = false;
 }
 
 async function getRandomCocktail() {
+    if (isLoading) return;
     showLoadingBar();
     try {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Add a 3-second delay
+        // Simulate delay for fetch processing
+        await new Promise(resolve => setTimeout(resolve, 500));
         const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
         const data = await response.json();
         const cocktail = data.drinks[0];
         displayCocktail(cocktail);
     } catch (error) {
-        console.error('Failed to fetch random cocktail:', error);
-        alert('Failed to fetch random cocktail. Please try again later.');
-    } finally {
+        console.error('Error fetching random cocktail:', error);
         hideLoadingBar();
     }
 }
-
-function showCocktailSearch() {
-    const content = document.getElementById('content');
-    content.innerHTML = `
-        <input type="text" id="cocktailSearchInput" placeholder="Enter the name of the cocktail">
-        <ul id="suggestionsList"></ul>
+async function selectCocktail() {
+    // Hide the current displayed cocktail and show the search input
+    document.getElementById('content').innerHTML = `
+            <input type="text" id="cocktailSearch" placeholder="Search for a cocktail..." autocomplete="off">
+            <ul id="searchResults"></ul>
     `;
-    document.getElementById('cocktailSearchInput').addEventListener('input', fetchCocktailSuggestions);
-}
-async function fetchCocktailSuggestions(event) {
-    const query = event.target.value;
-    if (query.length > 2) {
-        showLoadingBar();
+
+    // Reattach event listener for live search
+    const searchInput = document.getElementById("cocktailSearch");
+    const resultsList = document.getElementById("searchResults");
+
+    searchInput.addEventListener("input", async function () {
+        const query = searchInput.value.trim();
+        if (query.length < 3) {
+            resultsList.innerHTML = "";
+            return;
+        }
+
         try {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${query}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${encodeURIComponent(query)}`);
             const data = await response.json();
+
+            resultsList.innerHTML = "";
+
             if (data.drinks) {
-                displaySuggestions(data.drinks);
-            } else {
-                alert('Cocktail not found');
-                document.getElementById('suggestionsList').innerHTML = '';
+                data.drinks.forEach(drink => {
+                    const li = document.createElement("li");
+                    li.textContent = drink.strDrink;
+                    li.addEventListener("click", () => displayCocktail(drink));
+                    resultsList.appendChild(li);
+                });
             }
         } catch (error) {
-            console.error('Failed to fetch cocktail:', error);
-            alert('Failed to fetch cocktail. Please try again later.');
-        } finally {
-            hideLoadingBar();
+            console.error("Error fetching cocktail suggestions:", error);
         }
-    } else {
-        document.getElementById('suggestionsList').innerHTML = '';
-    }
-}
-
-function displaySuggestions(suggestions) {
-    const suggestionsList = document.getElementById('suggestionsList');
-    suggestionsList.innerHTML = '';
-    suggestions.forEach(cocktail => {
-        const listItem = document.createElement('li');
-        listItem.textContent = cocktail.strDrink;
-        listItem.addEventListener('click', () => selectCocktail(cocktail));
-        suggestionsList.appendChild(listItem);
     });
-}
-
-async function selectCocktail(cocktail) {
-    showLoadingBar();
-    try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${cocktail.idDrink}`);
-        const data = await response.json();
-        displayCocktail(data.drinks[0]);
-    } finally {
-        hideLoadingBar();
-    }
 }
 
 function showFavourites() {
@@ -110,14 +123,16 @@ function showFavourites() {
 }
 
 async function showFavouriteDetails(id) {
+    if (isLoading) return;
     showLoadingBar();
     try {
-       
+        await new Promise(resolve => setTimeout(resolve, 500));
         const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${id}`);
         const data = await response.json();
         const cocktail = data.drinks[0];
         displayCocktail(cocktail);
-    } finally {
+    } catch (error) {
+        console.error('Error fetching cocktail details:', error);
         hideLoadingBar();
     }
 }
@@ -129,33 +144,33 @@ function removeFromFavourites(id) {
     showFavourites();
 }
 
-function displayCocktails(cocktails) {
+function displayCocktail(cocktail) {
     const content = document.getElementById('content');
-    content.innerHTML = '<h2>Cocktails</h2>';
-    cocktails.forEach(cocktail => {
-        const ingredients = [];
-        for (let i = 1; i <= 15; i++) {
-            if (cocktail[`strIngredient${i}`]) {
-                ingredients.push(`${cocktail[`strIngredient${i}`]} - ${cocktail[`strMeasure${i}`] || ''}`);
-            }
+    const ingredients = [];
+    for (let i = 1; i <= 15; i++) {
+        if (cocktail[`strIngredient${i}`]) {
+            ingredients.push(`${cocktail[`strIngredient${i}`]} - ${cocktail[`strMeasure${i}`] || ''}`);
         }
-        const cocktailDiv = document.createElement('div');
-        cocktailDiv.innerHTML = `
-            <h3>${cocktail.strDrink}</h3>
-            <img src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px; border-radius: 10px;">
-            <p><strong>ID:</strong> ${cocktail.idDrink}</p>
-            <p><strong>Category:</strong> ${cocktail.strCategory}</p>
-            <p><strong>Ingredients:</strong></p>
-            <div class="ingredients">
-                ${ingredients.map(ingredient => `<div class="ingredient">${ingredient}</div>`).join('')}
-            </div>
-            <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
-            <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
-        `;
-        content.appendChild(cocktailDiv);
-    });
-}
+    }
+    content.innerHTML = `
+        <h2>${cocktail.strDrink}</h2>
+        <img id="cocktailImage" src="${cocktail.strDrinkThumb}" alt="${cocktail.strDrink}" style="width: 100%; max-width: 300px;">
+        <p><strong>ID:</strong> ${cocktail.idDrink}</p>
+        <p><strong>Category:</strong> ${cocktail.strCategory}</p>
+        <p><strong>Ingredients:</strong></p>
+        <ul>${ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}</ul>
+        <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
+        <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
+    `;
 
+    const img = document.getElementById('cocktailImage');
+    if (img) {
+        img.onload = () => hideLoadingBar();
+        img.onerror = () => hideLoadingBar();
+    } else {
+        hideLoadingBar();
+    }
+}
 
 function addToFavourites(id, name) {
     const favourites = JSON.parse(localStorage.getItem('favourites')) || [];
@@ -167,8 +182,3 @@ function addToFavourites(id, name) {
         alert('Already in favourites');
     }
 }
-
-const openai = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
-    apiKey: 'sk-2ea125c1a47d4b3bb6d0b13a2f56e5fa'
-});
