@@ -1,6 +1,13 @@
 document.getElementById('randomCocktailBtn').addEventListener('click', getRandomCocktail);
 document.getElementById('selectCocktailBtn').addEventListener('click', selectCocktail);
 document.getElementById('favouritesBtn').addEventListener('click', showFavourites);
+document.addEventListener("click", function(event) {
+    if (event.target && event.target.id === "addToFavBtn") {
+        const id = event.target.getAttribute("data-id");
+        const name = event.target.getAttribute("data-name").replace(/&apos;/g, "'");
+        addToFavourites(id, name);
+    }
+});
 document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("cocktailSearch");
     const resultsList = document.getElementById("searchResults");
@@ -160,7 +167,9 @@ function displayCocktail(cocktail) {
         <p><strong>Ingredients:</strong></p>
         <ul>${ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}</ul>
         <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
-        <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
+        <button id="addToFavBtn" data-id="${cocktail.idDrink}" data-name="${cocktail.strDrink.replace(/'/g, "&apos;")}">
+            Add to Favourites
+        </button>
     `;
 
     const img = document.getElementById('cocktailImage');
