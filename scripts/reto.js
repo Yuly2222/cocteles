@@ -1,6 +1,6 @@
 
 document.getElementById('randomCocktailBtn').addEventListener('click', getRandomCocktail);
-document.getElementById('selectCocktailBtn').addEventListener('click', selectCocktail);
+document.getElementById('selectCocktailBtn').addEventListener('click', showCocktailSearch);
 document.getElementById('favouritesBtn').addEventListener('click', showFavourites);
 
 function showLoadingBar() {
@@ -24,23 +24,52 @@ async function getRandomCocktail() {
     }
 }
 
-async function selectCocktail() {
-    const cocktailName = prompt('Enter the name of the cocktail:');
-    if (cocktailName) {
+function showCocktailSearch() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <input type="text" id="cocktailSearchInput" placeholder="Enter the name of the cocktail">
+        <ul id="suggestionsList"></ul>
+    `;
+    document.getElementById('cocktailSearchInput').addEventListener('input', fetchCocktailSuggestions);
+}
+
+async function fetchCocktailSuggestions(event) {
+    const query = event.target.value;
+    if (query.length > 2) {
         showLoadingBar();
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${cocktailName}`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${query}`);
             const data = await response.json();
-            if (data.drinks) {
-                const cocktail = data.drinks[0];
-                displayCocktail(cocktail);
-            } else {
-                alert('Cocktail not found');
-            }
+            displaySuggestions(data.drinks || []);
         } finally {
             hideLoadingBar();
         }
+    } else {
+        document.getElementById('suggestionsList').innerHTML = '';
+    }
+}
+
+function displaySuggestions(suggestions) {
+    const suggestionsList = document.getElementById('suggestionsList');
+    suggestionsList.innerHTML = '';
+    suggestions.forEach(cocktail => {
+        const listItem = document.createElement('li');
+        listItem.textContent = cocktail.strDrink;
+        listItem.addEventListener('click', () => selectCocktail(cocktail));
+        suggestionsList.appendChild(listItem);
+    });
+}
+
+async function selectCocktail(cocktail) {
+    showLoadingBar();
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const response = await fetch(`https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=${cocktail.idDrink}`);
+        const data = await response.json();
+        displayCocktail(data.drinks[0]);
+    } finally {
+        hideLoadingBar();
     }
 }
 
@@ -115,3 +144,8 @@ function addToFavourites(id, name) {
         alert('Already in favourites');
     }
 }
+
+const openai = new OpenAI({
+    baseURL: 'https://api.deepseek.com',
+    apiKey: 'sk-2ea125c1a47d4b3bb6d0b13a2f56e5fa'
+});
