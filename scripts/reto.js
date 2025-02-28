@@ -7,8 +7,18 @@ document.addEventListener("click", function(event) {
         const name = event.target.getAttribute("data-name").replace(/&apos;/g, "'");
         addToFavourites(id, name);
     }
-});
-document.addEventListener("DOMContentLoaded", () => {
+});document.addEventListener("DOMContentLoaded", () => {
+    const content = document.getElementById("content");
+
+    content.innerHTML = `
+        <input type="text" id="cocktailSearch" placeholder="Search for a cocktail..." autocomplete="off">
+        <ul id="searchResults"></ul>
+    `;
+
+    setTimeout(() => {
+        document.getElementById("cocktailSearch").focus();
+    }, 0);
+
     const searchInput = document.getElementById("cocktailSearch");
     const resultsList = document.getElementById("searchResults");
 
@@ -39,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+
 let isLoading = false;
 
 function showLoadingBar() {
@@ -59,7 +70,6 @@ async function getRandomCocktail() {
     if (isLoading) return;
     showLoadingBar();
     try {
-        // Simulate delay for fetch processing
         await new Promise(resolve => setTimeout(resolve, 500));
         const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php');
         const data = await response.json();
@@ -71,13 +81,15 @@ async function getRandomCocktail() {
     }
 }
 async function selectCocktail() {
-    // Hide the current displayed cocktail and show the search input
     document.getElementById('content').innerHTML = `
-            <input type="text" id="cocktailSearch" placeholder="Search for a cocktail..." autocomplete="off">
-            <ul id="searchResults"></ul>
+        <input type="text" id="cocktailSearch" placeholder="Search for a cocktail..." autocomplete="off">
+        <ul id="searchResults"></ul>
     `;
 
-    // Reattach event listener for live search
+    setTimeout(() => {
+        document.getElementById("cocktailSearch").focus();
+    }, 0);
+
     const searchInput = document.getElementById("cocktailSearch");
     const resultsList = document.getElementById("searchResults");
 
