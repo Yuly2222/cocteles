@@ -1,7 +1,24 @@
 document.getElementById('randomCocktailBtn').addEventListener('click', getRandomCocktail);
 document.getElementById('selectCocktailBtn').addEventListener('click', selectCocktail);
 document.getElementById('favouritesBtn').addEventListener('click', showFavourites);
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("click", function(event) {
+    if (event.target && event.target.id === "addToFavBtn") {
+        const id = event.target.getAttribute("data-id");
+        const name = event.target.getAttribute("data-name").replace(/&apos;/g, "'");
+        addToFavourites(id, name);
+    }
+});document.addEventListener("DOMContentLoaded", () => {
+    const content = document.getElementById("content");
+
+    content.innerHTML = `
+        <input type="text" id="cocktailSearch" placeholder="Search for a cocktail..." autocomplete="off">
+        <ul id="searchResults"></ul>
+    `;
+
+    setTimeout(() => {
+        document.getElementById("cocktailSearch").focus();
+    }, 0);
+
     const searchInput = document.getElementById("cocktailSearch");
     const resultsList = document.getElementById("searchResults");
 
@@ -32,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+
 let isLoading = false;
 
 function showLoadingBar() {
@@ -52,7 +70,6 @@ async function getRandomCocktail() {
     if (isLoading) return;
     showLoadingBar();
     try {
-        // Simulate delay for fetch processing
         await new Promise(resolve => setTimeout(resolve, 500));
         const response = await fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php');
         const data = await response.json();
@@ -64,13 +81,15 @@ async function getRandomCocktail() {
     }
 }
 async function selectCocktail() {
-    // Hide the current displayed cocktail and show the search input
     document.getElementById('content').innerHTML = `
-            <input type="text" id="cocktailSearch" placeholder="Search for a cocktail..." autocomplete="off">
-            <ul id="searchResults"></ul>
+        <input type="text" id="cocktailSearch" placeholder="Search for a cocktail..." autocomplete="off">
+        <ul id="searchResults"></ul>
     `;
 
-    // Reattach event listener for live search
+    setTimeout(() => {
+        document.getElementById("cocktailSearch").focus();
+    }, 0);
+
     const searchInput = document.getElementById("cocktailSearch");
     const resultsList = document.getElementById("searchResults");
 
@@ -160,7 +179,9 @@ function displayCocktail(cocktail) {
         <p><strong>Ingredients:</strong></p>
         <ul>${ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}</ul>
         <p><strong>Instructions:</strong> ${cocktail.strInstructions}</p>
-        <button onclick="addToFavourites('${cocktail.idDrink}', '${cocktail.strDrink}')">Add to Favourites</button>
+        <button id="addToFavBtn" data-id="${cocktail.idDrink}" data-name="${cocktail.strDrink.replace(/'/g, "&apos;")}">
+            Add to Favourites
+        </button>
     `;
 
     const img = document.getElementById('cocktailImage');
